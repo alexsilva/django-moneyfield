@@ -162,7 +162,7 @@ class FixedCurrencyFormField(forms.Field):
             raise ValidationError(msg.format(value, self.currency))
 
 
-class AbstractMoneyProxy(object):
+class AbstractMoneyProxy:
     """Object descriptor for MoneyFields"""
     def __init__(self, field):
         self.field = field

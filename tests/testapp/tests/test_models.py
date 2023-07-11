@@ -91,7 +91,7 @@ class TestFieldValidation(TestCase):
             )
 
 
-class TestMoneyFieldMixin(object):
+class TestMoneyFieldMixin:
     def setUp(self):
         self.table_name = self.model._meta.db_table
         self.cursor = connection.cursor()

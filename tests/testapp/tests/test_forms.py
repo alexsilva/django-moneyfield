@@ -59,7 +59,7 @@ class TestMoneyModelFormValidation(TestCase):
             form = Form()
 
 
-class MoneyModelFormMixin(object):
+class MoneyModelFormMixin:
     def test_moneyfield_only(self):
         form = self.Form()
         names = form.fields.keys()
