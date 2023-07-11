@@ -30,8 +30,8 @@ class MoneyModelFormMetaclass(ModelFormMetaclass):
         if name == 'MoneyModelForm':
             return new_class
         
-        modelopts = new_class._meta.model._meta
-        if not hasattr(modelopts, 'moneyfields'):
+        model_opts = new_class._meta.model._meta
+        if not hasattr(model_opts, 'money_fields'):
             raise MoneyModelFormError("The Model used with this ModelForm "
                                       "does not contain MoneyFields")
         
@@ -39,15 +39,15 @@ class MoneyModelFormMetaclass(ModelFormMetaclass):
         # money subfields with a specialised money multivalue form field,
         # while preserving the original ordering.
         fields = OrderedDict()
-        for fieldname, field in new_class.base_fields.items():
-            for moneyfield in modelopts.moneyfields:
-                if fieldname == moneyfield.amount_attr:
-                    fields[moneyfield.name] = moneyfield.formfield()
+        for field_name, field in new_class.base_fields.items():
+            for money_field in model_opts.money_fields:
+                if field_name == money_field.amount_attr:
+                    fields[money_field.name] = money_field.formfield()
                     break
-                if fieldname == moneyfield.currency_attr:
+                if field_name == money_field.currency_attr:
                     break
             else:
-                fields[fieldname] = field
+                fields[field_name] = field
         
         new_class.base_fields = fields
         return new_class
@@ -56,25 +56,25 @@ class MoneyModelFormMetaclass(ModelFormMetaclass):
 class MoneyModelForm(forms.ModelForm, metaclass=MoneyModelFormMetaclass):
     def __init__(self, *args, initial: dict = None, instance=None, **kwargs):
         opts = self._meta
-        modelopts = opts.model._meta
+        model_opts = opts.model._meta
         if initial is None:
             initial = {}
         if instance:
             # Populate the multivalue form field using the initial dict,
             # as model_to_dict() only sees the model's _meta.fields
-            for moneyfield in modelopts.moneyfields:
+            for money_field in model_opts.money_fields:
                 initial.update({
-                    moneyfield.name: getattr(instance, moneyfield.name)}
+                    money_field.name: getattr(instance, money_field.name)}
                 )
         
         super().__init__(*args, initial=initial, instance=instance, **kwargs)
         
         # Money "subfields" cannot be excluded separately
         if opts.exclude:
-            for moneyfield in modelopts.moneyfields:
-                if not moneyfield.fixed_currency:
-                    if not ((moneyfield.amount_attr in opts.exclude) == 
-                            (moneyfield.currency_attr in opts.exclude)):
+            for money_field in model_opts.money_fields:
+                if not money_field.fixed_currency:
+                    if not ((money_field.amount_attr in opts.exclude) == 
+                            (money_field.currency_attr in opts.exclude)):
                         msg = ('Cannot exclude only one money field '
                                'from the model form.')
                         raise MoneyModelFormError(msg)
@@ -85,12 +85,12 @@ class MoneyModelForm(forms.ModelForm, metaclass=MoneyModelFormMetaclass):
         # find match between the form multivalue field (e.g. "price"), and the
         # model's _meta.fields (e.g. "price_amount" and "price_currency").
         opts = self._meta
-        modelopts = opts.model._meta
-        for moneyfield in modelopts.moneyfields:
-            if moneyfield.name in self.cleaned_data:
-                value = self.cleaned_data[moneyfield.name]
+        model_opts = opts.model._meta
+        for money_field in model_opts.money_fields:
+            if money_field.name in self.cleaned_data:
+                value = self.cleaned_data[money_field.name]
                 if value:
-                    setattr(self.instance, moneyfield.name, value)
+                    setattr(self.instance, money_field.name, value)
         
         return cleaned_data
 
@@ -306,9 +306,9 @@ class MoneyField(models.Field):
         
         # Keep a list of MoneyFields in the model's _meta
         # This will help identify which MoneyFields a model has
-        if not hasattr(cls._meta, 'moneyfields'):
-            cls._meta.moneyfields = []
-        cls._meta.moneyfields.append(self)
+        if not hasattr(cls._meta, 'money_fields'):
+            cls._meta.money_fields = []
+        cls._meta.money_fields.append(self)
     
     def formfield(self, **kwargs):
         formfield_amount = self.amount_field.formfield()
