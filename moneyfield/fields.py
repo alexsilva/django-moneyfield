@@ -57,9 +57,11 @@ class MoneyModelFormMetaclass(ModelFormMetaclass):
 
 
 class MoneyModelForm(forms.ModelForm, metaclass=MoneyModelFormMetaclass):
-    def __init__(self, *args, initial={}, instance=None, **kwargs):
+    def __init__(self, *args, initial: dict = None, instance=None, **kwargs):
         opts = self._meta
         modelopts = opts.model._meta
+        if initial is None:
+            initial = {}
         if instance:
             # Populate the multivalue form field using the initial dict,
             # as model_to_dict() only sees the model's _meta.fields
@@ -136,7 +138,7 @@ class FixedCurrencyWidget(forms.Widget):
         value = super().value_from_datadict(data, files, name)
         return value or self.currency
     
-    def render(self, name, value, attrs=None):
+    def render(self, name, value, attrs=None, **kwargs):
         if value and not value is self.currency:
             msg = ('FixedCurrencyWidget "{}" with fixed currency "{}" '
                    'cannot be rendered with currency "{}".')
@@ -184,7 +186,7 @@ class AbstractMoneyProxy(object):
         """Set amount and currency attributes in the model instance"""
         if isinstance(value, Money):
             self._set_values(obj, value.amount, value.currency)
-        elif isinstance(value, None):
+        elif value is None:
             self._set_values(obj, None, None)
         else:
             msg = 'Cannot assign "{}" to MoneyField "{}".'
@@ -291,7 +293,7 @@ class MoneyField(models.Field):
                 **kwargs
             )
     
-    def contribute_to_class(self, cls, name):
+    def contribute_to_class(self, cls, name, **kwargs):
         self.name = name
         
         self.amount_attr = '{}_amount'.format(name)
