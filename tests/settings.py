@@ -9,6 +9,7 @@ USE_L10N = True
 SECRET_KEY = "justthetestapp"
 
 INSTALLED_APPS = (
+    'moneyfield',
     'testapp',
 )
 
