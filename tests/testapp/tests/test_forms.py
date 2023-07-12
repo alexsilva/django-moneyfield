@@ -157,7 +157,7 @@ class TestChoicesCurrencyMoneyModelForm(MoneyModelFormMixin, TestCase):
         })
         html = form.as_p()
         self.assertIn('value="1234.00"', html)
-        self.assertIn('value="USD" selected="selected"', html)
+        self.assertIn('value="USD" selected', html)
     
     def test_currency_initial_different_than_default(self):
         form = self.Form(initial={
@@ -165,7 +165,7 @@ class TestChoicesCurrencyMoneyModelForm(MoneyModelFormMixin, TestCase):
         })
         html = form.as_p()
         self.assertIn('value="1234.00"', html)
-        self.assertIn('value="EUR" selected="selected"', html)
+        self.assertIn('value="EUR" selected', html)
     
     def test_currency_initial_from_default(self):
         form = self.Form()
