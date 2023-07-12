@@ -125,6 +125,8 @@ class MoneyFormField(forms.MultiValueField):
 
 
 class FixedCurrencyWidget(forms.Widget):
+    template_name: str = "moneyfield/widgets/fixed_currency.html"
+
     def __init__(self, attrs=None, currency=None):
         assert currency
         super().__init__(attrs=attrs)
@@ -134,27 +136,29 @@ class FixedCurrencyWidget(forms.Widget):
         # Defaults to fixed currency
         value = super().value_from_datadict(data, files, name)
         return value or self.currency
-    
-    def render(self, name, value, attrs=None, **kwargs):
-        if value and not value is self.currency:
+
+    def get_context(self, name, value, attrs, **kwargs):
+        if value and value != self.currency:
             msg = ('FixedCurrencyWidget "{}" with fixed currency "{}" '
                    'cannot be rendered with currency "{}".')
             raise TypeError(msg.format(name, self.currency, value))
-        final_attrs = self.build_attrs(attrs, style='vertical-align: middle;')
-        return format_html('<span{0}>{1}</span>',
-                           flatatt(final_attrs),
-                           self.currency)
+        attrs = self.build_attrs(attrs, {
+            'style': 'vertical-align: middle;'
+        })
+        context = super().get_context(name, value, attrs, **kwargs)
+        context['widget']['currency'] = self.currency
+        return context
 
 
 class FixedCurrencyFormField(forms.Field):
     def __init__(self, currency=None, *args, **kwargs):
         assert currency
         self.currency = currency
-        self.widget = FixedCurrencyWidget(currency=currency)
+        kwargs.setdefault("widget", FixedCurrencyWidget(currency=currency))
         super().__init__(*args, **kwargs)
     
     def validate(self, value):
-        if not value is self.currency:
+        if value is not self.currency:
             msg = 'Invalid currency "{}" for "{}"-only FixedCurrencyFormField'
             raise ValidationError(msg.format(value, self.currency))
 
