@@ -201,7 +201,7 @@ class SimpleMoneyProxy(AbstractMoneyProxy):
                 self.field.fixed_currency)
     
     def _set_values(self, obj, amount, currency=None):
-        if not currency is None:
+        if currency is not None:
             if currency != self.field.fixed_currency:
                 raise TypeError('Field "{}" is {}-only.'.format(
                     self.field.name, 
