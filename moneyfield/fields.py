@@ -1,3 +1,4 @@
+import decimal
 import re
 from collections import OrderedDict
 
@@ -185,6 +186,8 @@ class AbstractMoneyProxy:
         """Set amount and currency attributes in the model instance"""
         if isinstance(value, Money):
             self._set_values(obj, value.amount, value.currency)
+        elif self.field.fixed_currency and not self.field.amount_proxy and isinstance(value, decimal.Decimal):
+            self._set_values(obj, value)
         elif value is None:
             self._set_values(obj, None, None)
         else:
@@ -226,11 +229,15 @@ class MoneyField(models.Field):
                  max_digits=None, decimal_places=None,
                  currency=None, currency_choices=None,
                  currency_default=NOT_PROVIDED,
-                 default=NOT_PROVIDED, amount_default=NOT_PROVIDED, **kwargs):
+                 default=NOT_PROVIDED,
+                 amount_default=NOT_PROVIDED,
+                 amount_proxy=True,
+                 **kwargs):
         
         super().__init__(verbose_name, name, default=default, **kwargs)
         self.fixed_currency = currency
-        
+        self.amount_proxy = amount_proxy
+
         # DecimalField pre-validation
         if decimal_places is None or decimal_places < 0:
             msg = ('"{}": MoneyFields require a non-negative integer '
@@ -274,12 +281,17 @@ class MoneyField(models.Field):
                 msg = ('MoneyField "{}" default must be '
                        'of type Money, it is "{}".')
                 raise TypeError(msg.format(self.name, type(currency)))
-        
+
+        amount_options = kwargs.copy()
+        if self.fixed_currency and not self.amount_proxy:
+            amount_options['verbose_name'] = self.verbose_name
+            amount_options['name'] = self.name
+
         self.amount_field = models.DecimalField(
             decimal_places=decimal_places,
             max_digits=max_digits,
             default=amount_default,
-            **kwargs
+            **amount_options
         )
         if not self.fixed_currency:
             # This Moneyfield can have different currencies.
@@ -294,8 +306,11 @@ class MoneyField(models.Field):
     
     def contribute_to_class(self, cls, name, **kwargs):
         self.name = name
-        
-        self.amount_attr = '{}_amount'.format(name)
+        if self.fixed_currency and not self.amount_proxy:
+            self.amount_attr = name
+        else:
+            self.amount_attr = '{}_amount'.format(name)
+
         cls.add_to_class(self.amount_attr, self.amount_field)
         
         if not self.fixed_currency:
