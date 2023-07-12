@@ -1,6 +1,6 @@
 from decimal import Decimal
 
-from django.forms.models import modelform_factory
+from django.forms.models import modelform_factory, ALL_FIELDS
 from django.test import TestCase
 
 from money import Money
@@ -15,14 +15,15 @@ from testapp.models import (DummyModel, FixedCurrencyModel, FreeCurrencyModel,
 
 class TestMoneyModelFormOrdering(TestCase):
     def test_field_natural_order(self):
-        form = modelform_factory(SomeMoney, form=MoneyModelForm)()
+        form = modelform_factory(SomeMoney, form=MoneyModelForm, fields=ALL_FIELDS)()
         self.assertEqual(list(form.fields.keys()), ['field1', 'field2', 'field3'])
 
 
 class TestMoneyModelFormValidation(TestCase):
     def test_model_without_moneyfields(self):
         with self.assertRaises(MoneyModelFormError):
-            Form = modelform_factory(DummyModel, form=MoneyModelForm)
+            Form = modelform_factory(DummyModel, form=MoneyModelForm,
+                                     fields=ALL_FIELDS)
     
     def test_excluded_all_moneyfield_parts(self):
         Form = modelform_factory(FixedCurrencyModel, form=MoneyModelForm, 
@@ -91,7 +92,8 @@ class MoneyModelFormMixin:
 
 class TestFixedCurrencyModelForm(MoneyModelFormMixin, TestCase):
     def setUp(self):
-        self.Form = modelform_factory(FixedCurrencyModel, form=MoneyModelForm)
+        self.Form = modelform_factory(FixedCurrencyModel, form=MoneyModelForm,
+                                      fields=ALL_FIELDS)
     
     def test_initial(self):
         form = self.Form(initial={
@@ -132,7 +134,8 @@ class TestFixedCurrencyModelForm(MoneyModelFormMixin, TestCase):
 
 class TestFreeCurrencyMoneyModelForm(MoneyModelFormMixin, TestCase):
     def setUp(self):
-        self.Form = modelform_factory(FreeCurrencyModel, form=MoneyModelForm)
+        self.Form = modelform_factory(FreeCurrencyModel, form=MoneyModelForm,
+                                      fields=ALL_FIELDS)
     
     def test_initial(self):
         form = self.Form(initial={
@@ -145,7 +148,8 @@ class TestFreeCurrencyMoneyModelForm(MoneyModelFormMixin, TestCase):
 
 class TestChoicesCurrencyMoneyModelForm(MoneyModelFormMixin, TestCase):
     def setUp(self):
-        self.Form = modelform_factory(ChoicesCurrencyModel, form=MoneyModelForm)
+        self.Form = modelform_factory(ChoicesCurrencyModel, form=MoneyModelForm,
+                                      fields=ALL_FIELDS)
     
     def test_initial(self):
         form = self.Form(initial={
