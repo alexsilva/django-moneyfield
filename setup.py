@@ -16,7 +16,7 @@ setup(
         'moneyfield'
     ],
     requires=[
-        'django (>=1.5)',
+        'django (>=3.2)',
         'money',
     ],
     classifiers=[
