@@ -118,9 +118,11 @@ class MoneyFormField(forms.MultiValueField):
         if not kwargs.setdefault('initial'):
             kwargs['initial'] = [f.initial for f in fields]
         super().__init__(*args, fields=fields, **kwargs)
-    
+
     def compress(self, data_list):
-        return Money(data_list[0], data_list[1])
+        if data_list:
+            return Money(data_list[0], data_list[1])
+        return None
 
 
 class FixedCurrencyWidget(forms.Widget):
@@ -222,6 +224,14 @@ class CompositeMoneyProxy(AbstractMoneyProxy):
         obj.__dict__[self.field.currency_attr] = currency
 
 
+class MoneyDecimalField(models.DecimalField):
+    """Make necessary adjustments when MoneyField, has amount_proxy=False"""
+    def to_python(self, value):
+        if isinstance(value, Money):
+            return value.amount
+        return super().to_python(value)
+
+
 class MoneyField(models.Field):
     description = "Money"
     
@@ -287,7 +297,7 @@ class MoneyField(models.Field):
             amount_options['verbose_name'] = self.verbose_name
             amount_options['name'] = self.name
 
-        self.amount_field = models.DecimalField(
+        self.amount_field = MoneyDecimalField(
             decimal_places=decimal_places,
             max_digits=max_digits,
             default=amount_default,
