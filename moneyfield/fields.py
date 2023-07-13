@@ -1,14 +1,17 @@
-import decimal
 import re
 from collections import OrderedDict
 
+from django.utils.functional import cached_property
+from django.utils.translation import to_locale, get_language
 from django import forms
 from django.core.exceptions import FieldError, ValidationError
 from django.db import models
 from django.db.models import NOT_PROVIDED
 from django.forms.models import ModelFormMetaclass
 from django.utils.encoding import force_text
-from money import Money
+from money.money import BABEL_AVAILABLE
+import money
+
 
 from moneyfield.exceptions import *
 
@@ -16,6 +19,23 @@ __all__ = ['MoneyField', 'MoneyModelForm']
 
 
 REGEX_CURRENCY_CODE = re.compile("^[A-Z]{3}$")
+
+
+class Money(money.Money):
+
+    @cached_property
+    def language_locale(self):
+        return to_locale(get_language())
+
+    def __str__(self):
+        if BABEL_AVAILABLE:
+            # noinspection PyBroadException
+            try:
+                return self.format(self.language_locale)
+            except Exception as exc:
+                return super().__str__()
+        else:
+            return super().__str__()
 
 
 def currency_code_validator(value):
