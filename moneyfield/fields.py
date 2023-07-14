@@ -21,7 +21,7 @@ __all__ = ['MoneyField', 'MoneyModelForm']
 REGEX_CURRENCY_CODE = re.compile("^[A-Z]{3}$")
 
 
-class Money(money.Money):
+class MoneyLC(money.Money):
 
     @cached_property
     def language_locale(self):
@@ -141,7 +141,7 @@ class MoneyFormField(forms.MultiValueField):
 
     def compress(self, data_list):
         if data_list:
-            return Money(data_list[0], data_list[1])
+            return MoneyLC(data_list[0], data_list[1])
         return None
 
 
@@ -202,7 +202,7 @@ class AbstractMoneyProxy:
         amount, currency = self._get_values(obj)
         if amount is None or currency is None:
             return None
-        return Money(amount, currency)
+        return MoneyLC(amount, currency)
     
     def __set__(self, obj, value):
         """Set amount and currency attributes in the model instance"""
@@ -247,7 +247,7 @@ class CompositeMoneyProxy(AbstractMoneyProxy):
 class MoneyDecimalField(models.DecimalField):
     """Make necessary adjustments when MoneyField, has amount_proxy=False"""
     def to_python(self, value):
-        if isinstance(value, Money):
+        if isinstance(value, money.Money):
             return value.amount
         return super().to_python(value)
 
@@ -287,7 +287,7 @@ class MoneyField(models.Field):
         
         # Money default
         if default != NOT_PROVIDED:
-            if type(default) is Money:
+            if isinstance(default, money.Money):
                 # Must be compatible with fixed currency
                 if currency and not (currency == default.currency):
                     msg = ('MoneyField "{}" has fixed currency "{}". '
