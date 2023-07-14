@@ -116,7 +116,7 @@ class MoneyModelForm(forms.ModelForm, metaclass=MoneyModelFormMetaclass):
 
 class MoneyWidget(forms.MultiWidget):
     def decompress(self, value):
-        if isinstance(value, Money):
+        if isinstance(value, money.Money):
             return [value.amount, value.currency]
         if value is None:
             return [None, None]
@@ -206,7 +206,7 @@ class AbstractMoneyProxy:
     
     def __set__(self, obj, value):
         """Set amount and currency attributes in the model instance"""
-        if isinstance(value, Money):
+        if isinstance(value, money.Money):
             self._set_values(obj, value.amount, value.currency)
         elif value is None:
             self._set_values(obj, None, None)
