@@ -1,3 +1,4 @@
+import decimal
 import re
 from collections import OrderedDict
 
@@ -210,7 +211,7 @@ class AbstractMoneyProxy:
             self._set_values(obj, value.amount, value.currency)
         elif value is None:
             self._set_values(obj, None, None)
-        elif self.field.fixed_currency and not self.field.amount_proxy:
+        elif self.field.fixed_currency and not self.field.amount_proxy and isinstance(value, decimal.Decimal):
             self._set_values(obj, value)
         else:
             msg = 'Cannot assign "{}" to MoneyField "{}".'
