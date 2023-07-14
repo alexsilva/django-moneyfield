@@ -16,7 +16,7 @@ import money
 
 from moneyfield.exceptions import *
 
-__all__ = ['MoneyField', 'MoneyModelForm']
+__all__ = ['MoneyField', 'MoneyModelForm', 'MoneyLC']
 
 
 REGEX_CURRENCY_CODE = re.compile("^[A-Z]{3}$")
