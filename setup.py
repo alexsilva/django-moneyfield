@@ -16,8 +16,8 @@ setup(
     packages=[
         'moneyfield'
     ],
-    requires=[
-        'django (>=3.2)',
+    install_requires=[
+        'django>=3.2',
         'money',
     ],
     classifiers=[
