@@ -1,6 +1,7 @@
 import decimal
 import re
 from collections import OrderedDict
+from distutils.version import StrictVersion
 
 from django.utils.functional import cached_property
 from django.utils.translation import to_locale, get_language
@@ -10,8 +11,15 @@ from django.db import models
 from django.db.models import NOT_PROVIDED
 from django.forms.models import ModelFormMetaclass
 from django.utils.encoding import force_text
-from money.money import BABEL_AVAILABLE
 import money
+
+try:
+    import babel
+    import babel.numbers
+    BABEL_VERSION = StrictVersion(babel.__version__)
+    LC_NUMERIC = babel.default_locale('LC_NUMERIC')
+except ImportError:
+    babel = None
 
 
 from moneyfield.exceptions import *
@@ -28,11 +36,33 @@ class MoneyLC(money.Money):
     def language_locale(self):
         return to_locale(get_language())
 
+    @property
+    def _amount_00_prec(self):
+        """Two decimal places down for better accuracy in monetary values.
+        1.9867272 -> 1.98
+        """
+        return self._amount.quantize(decimal.Decimal('.00'), rounding=decimal.ROUND_DOWN)
+
+    def format(self, locale=LC_NUMERIC, pattern=None, currency_digits=True,
+               format_type='standard', **options):
+        if babel:
+            if BABEL_VERSION < StrictVersion('2.2'):
+                raise Exception('Babel {} is unsupported. '
+                                'Please upgrade to 2.2 or higher.'.format(BABEL_VERSION))
+            return babel.numbers.format_currency(
+                self._amount_00_prec, self._currency, format=pattern, locale=locale,
+                currency_digits=currency_digits, format_type=format_type,
+                **options)
+        else:
+            raise NotImplementedError("formatting requires Babel "
+                                      "(https://pypi.python.org/pypi/Babel)")
+
     def __str__(self):
-        if BABEL_AVAILABLE:
+        if babel:
             # noinspection PyBroadException
             try:
-                return self.format(self.language_locale)
+                return self.format(self.language_locale,
+                                   decimal_quantization=False)
             except Exception as exc:
                 return super().__str__()
         else:
