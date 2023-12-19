@@ -79,12 +79,20 @@ class MoneyModelFormMetaclass(ModelFormMetaclass):
         new_class = super().__new__(cls, name, bases, attrs)
         if name == 'MoneyModelForm':
             return new_class
-        
+
+        money_fields = set()
+        # will support at most one level of inheritance.
+        for model_cls in new_class._meta.model.mro()[:2]:
+            if (model_opts := getattr(model_cls, '_meta', None)) and hasattr(model_opts, 'money_fields'):
+                money_fields.update(model_opts.money_fields)
+
         model_opts = new_class._meta.model._meta
-        if not hasattr(model_opts, 'money_fields'):
+        model_opts.money_fields = money_fields
+
+        if not model_opts.money_fields:
             raise MoneyModelFormError("The Model used with this ModelForm "
                                       "does not contain MoneyFields")
-        
+
         # Rebuild the dict of form fields by replacing fields derived from
         # money subfields with a specialised money multivalue form field,
         # while preserving the original ordering.
