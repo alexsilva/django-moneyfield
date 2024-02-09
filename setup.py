@@ -17,7 +17,6 @@ setup(
         'moneyfield'
     ],
     install_requires=[
-        'django>=3,<4',
         'money',
     ],
     classifiers=[
