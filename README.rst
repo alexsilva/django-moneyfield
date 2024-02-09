@@ -17,8 +17,7 @@ Installation
 
 Moneyfield requires:
 
-+ Python ==3.3
-+ Django ==1.5 (still working on 1.6 compatibility)
++ django >=3,<4
 + `Money <https://pypi.python.org/pypi/money>`_
 + `Babel <https://pypi.python.org/pypi/Babel>`_ (if you need currency formatting)
 
