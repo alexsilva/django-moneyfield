@@ -19,7 +19,7 @@ try:
     BABEL_VERSION = StrictVersion(babel.__version__)
     LC_NUMERIC = babel.default_locale('LC_NUMERIC')
 except ImportError:
-    babel = None
+    babel = LC_NUMERIC = None
 
 
 from moneyfield.exceptions import *
