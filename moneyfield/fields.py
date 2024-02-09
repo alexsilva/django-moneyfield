@@ -398,31 +398,30 @@ class MoneyField(models.Field):
     
     def formfield(self, **kwargs):
         formfield_amount = self.amount_field.formfield()
+        form_initial = [self.amount_field.default]
         if not self.fixed_currency:
             formfield_currency = self.currency_field.formfield(
                 validators=[currency_code_validator]
             )
+            form_initial.append(self.currency_field.default)
         else:
+            form_initial.append(self.fixed_currency)
             formfield_currency = FixedCurrencyFormField(
                 currency=self.fixed_currency
             )
-        
+
         widget_amount = formfield_amount.widget
         widget_currency = formfield_currency.widget
-        
+
         # Adjust currency input size
         if type(widget_currency) is forms.TextInput:
             widget_currency.attrs.update({'size': 3})
-        
+
         config = {
             'fields': (formfield_amount, formfield_currency),
-            'widget': MoneyWidget(widgets=(widget_amount, widget_currency))
+            'widget': MoneyWidget(widgets=(widget_amount, widget_currency)),
+            'initial': form_initial
         }
         config.update(kwargs)
-        
+
         return super().formfield(form_class=MoneyFormField, **config)
-
-
-
-
-
