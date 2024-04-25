@@ -10,7 +10,7 @@ from django.core.exceptions import FieldError, ValidationError
 from django.db import models
 from django.db.models import NOT_PROVIDED
 from django.forms.models import ModelFormMetaclass
-from django.utils.encoding import force_text
+from django.utils.encoding import force_str
 import money
 
 try:
@@ -70,7 +70,7 @@ class MoneyLC(money.Money):
 
 
 def currency_code_validator(value):
-    if not REGEX_CURRENCY_CODE.match(force_text(value)):
+    if not REGEX_CURRENCY_CODE.match(force_str(value)):
         raise ValidationError('Invalid currency code.')
 
 
